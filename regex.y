@@ -37,6 +37,22 @@ re = {
     s.children = [a];
     return s;
   }),
+  plus: (function(a) {
+    var p = {};
+    p.op = "p";
+    p.expanded = false;
+    p.text = ("t" === a.op) ? a.text + "+" : "(" + a.text + ")+";
+    p.children = [a];
+    return p;
+  }),
+  question: (function(a) {
+    var q = {};
+    q.op = "q";
+    q.expanded = false;
+    q.text = ("t" === a.op) ? a.text + "?" : "(" + a.text + ")?";
+    q.children = [a];
+    return q;
+  }),
   terminal: (function(text) {
     var t = {};
     t.op = "t";
@@ -55,6 +71,8 @@ re = {
 [a-zA-Z0-9]  return 'TERMINAL'
 "|"          return '|'
 "*"          return '*'
+"+"          return '+'
+"?"          return '?'
 "("          return '('
 ")"          return ')'
 <<EOF>>      return 'EOF'
@@ -67,8 +85,8 @@ re = {
 
 %% /* language grammar */
 
-prog: /* empty */         { yyerror("empty pattern"); }
-|     expr1 EOF           { return $1; }
+prog: /* empty */         { yyerror("empty");      }
+|     expr1 EOF           { return $1;             }
 ;
 
 expr1: expr2
@@ -81,10 +99,12 @@ expr2: expr3
 
 expr3: expr4
 |      expr3 '*'          { $$ = re.star($1);      }
+|      expr3 '+'          { $$ = re.plus($1);      }
+|      expr3 '?'          { $$ = re.question($1);  }
 ;
 
 expr4: TERMINAL           { $$ = re.terminal($1);  }
-|      '(' expr1 ')'      { $$ = $2;                  }
+|      '(' expr1 ')'      { $$ = $2;               }
 ;
 
 
