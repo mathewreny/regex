@@ -7,7 +7,7 @@ Regular expression parser for Jison Yacc.
 %lex
 
 %{
-parse = {
+re = {
   union: (function(a, b) {
     var u = {};
     u.op = "u";
@@ -72,18 +72,18 @@ prog: /* empty */         { yyerror("empty pattern"); }
 ;
 
 expr1: expr2
-|      expr1 '|' expr2    { $$ = parse.union($1, $3); }
+|      expr1 '|' expr2    { $$ = re.union($1, $3); }
 ;
 
 expr2: expr3
-|      expr2 expr3        { $$ = parse.cat($1, $2);   }
+|      expr2 expr3        { $$ = re.cat($1, $2);   }
 ;
 
 expr3: expr4
-|      expr3 '*'          { $$ = parse.star($1);      }
+|      expr3 '*'          { $$ = re.star($1);      }
 ;
 
-expr4: TERMINAL           { $$ = parse.terminal($1);  }
+expr4: TERMINAL           { $$ = re.terminal($1);  }
 |      '(' expr1 ')'      { $$ = $2;                  }
 ;
 
