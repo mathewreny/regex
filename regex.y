@@ -8,7 +8,6 @@ Regular expression parser for Jison Yacc.
 
 %{
 parse = {
-  states: 5,
   union: (function(a, b) {
     var u = {};
     u.op = "u";
