@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Hello Web</title>
+		<script src="file:///Users/mahi/blog/regex/regex_parser.js"></script>
+		<script>
+			function fillStates(tree) {
+				var states = 0;
+				var queue = [tree];
+				while (0 != queue.length) {
+					var len = queue.length;
+					for (var s = 0; s < len; s++) {
+						var node = queue.shift();
+						if ("undefined" === typeof node.start) {
+							node.start = states;
+							states += 1;
+						} 
+						if ("undefined" === typeof node.finish) {
+							node.finish = states;
+							states += 1;
+						}
+						switch(node.op) {
+						case "c":
+							node.children[0].finish = states;
+							states += 1;
+							for (var ch = 1; ch < node.children.length; ch++) {
+								node.children[ch].start = node.children[ch-1].finish;
+								node.children[ch].finish = states;
+								states += 1;
+							}
+							states -= 1;
+							node.children[0].start = node.start;
+							node.children[node.children.length - 1].finish = node.finish;
+							queue = queue.concat(node.children);
+							break;
+						case "u":
+							queue = queue.concat(node.children);
+							break;
+						case "s":
+							queue = queue.concat(node.children);
+							break;
+						case "q":
+							queue = queue.concat(node.children);
+							break;
+						case "p":
+							queue = queue.concat(node.children);
+							break;
+						case "t":
+							break;
+						}
+					}
+				}
+			}
+		</script>
+	</head>
+	<body>
+			<input id="regexinput" type="text"></input>
+			<button onclick="compileRegex();">button</button>
+		<pre id="rawerror">
+		</pre>
+		<pre id="rawjson">
+
+		</pre>
+		<script>
+			function compileRegex() {
+				var text = document.getElementById("regexinput").value;
+				try {
+					regex = parser.parse(String(text));
+					fillStates(regex);
+					var json = JSON.stringify(regex, null, 2);	
+					document.getElementById("rawjson").innerHTML = json;
+				} catch(e) {
+					document.getElementById("rawerror").innerHTML = e;
+				}
+			}
+		</script>
+	</body>
+</html>
