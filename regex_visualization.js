@@ -183,7 +183,7 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 		}
 
 
-
+		var da = radius / 4.0;
 
 		this.svg.innerHTML += "<defs>";
 		for (var i = 1; i < this.states+1; i++) {
@@ -211,7 +211,6 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 			this.svg.innerHTML += '<circle cx="' + state.x + '" cy="' + state.y + circlefinish;
 		}
 
-		var da = radius / 5.0;
 		for (var i = 1; i < this.states + 1; i++) {
 			for (var j = 0; j < arrArrows[i].length; j++) {
 				var a = arrArrows[i][j];
@@ -221,19 +220,21 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 				switch (a.arrow) {
 					case "t":
 						this.svg.innerHTML += '<use xlink:href="#' + pathid + '" fill="none" stroke="black" stroke-width="1" />';
-						var svgtext = '<text text-anchor="middle" font-family="Courier New" font-size="12.0"><textPath startOffset="50%" xlink:href="#' + pathid + '">';
+						var svgtext = '<text transform="translate('+da+')" text-anchor="middle" font-family="Courier New" font-size="12.0"><textPath startOffset="50%" xlink:href="#' + pathid + '">';
 						this.svg.innerHTML += svgtext + a.text + '</textPath></text>';
 						var tpath = "M"+sf.x+" "+(sf.y-radius)+" L"+(sf.x-da)+" "+(sf.y-radius-da)+" L"+(sf.x+da)+" "+(sf.y-radius-da);
 						this.svg.innerHTML += '<path fill="black" d="'+tpath+'" />';
 						break;
 					case "unexpanded":
 						this.svg.innerHTML += '<use xlink:href="#' + pathid + '" fill="none" stroke="black" stroke-width="1" />';
-						var svgtext = '<text text-anchor="middle" font-family="Courier New" font-size="12.0"><textPath startOffset="50%" xlink:href="#' + pathid + '">';
+						var svgtext = '<text transform="translate('+da+')"  text-anchor="middle" font-family="Courier New" font-size="12.0"><textPath startOffset="50%" xlink:href="#' + pathid + '">';
 						svgtext += '<a onclick="expandRegex(' + "'" + pathid + "'" + ');">' + a.text + '</a></textPath></text>';
 						this.svg.innerHTML += svgtext;
 						var tpath = "M"+sf.x+" "+(sf.y-radius)+" L"+(sf.x-da)+" "+(sf.y-radius-da)+" L"+(sf.x+da)+" "+(sf.y-radius-da);
 						this.svg.innerHTML += '<path fill="black" d="'+tpath+'" />';
 						break;
+					case "qstart":
+					case "pstart":
 					case "utop":
 						// gather required points for the bezier path. the points c(x|y)(f|b|s) correspond to final, cubic, and start.
 						var cxf = sf.x;
@@ -245,7 +246,6 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 						var cys = ss.y + radius*Math.sin(angle);
 						// now create the bezier path svg element.
 						var bpath = "M"+cxs+" "+cys+" Q"+cxb+" "+cyb+" "+cxf+" "+cyf+" L"+sf.x+" "+(sf.y-radius);
-						var da = radius / 5.0;
 						this.svg.innerHTML += '<path fill="none" stroke="black" stroke-dasharray="'+da+","+da+'" stroke-width="1" d="'+bpath+'" />';
 						var tpath = "M"+sf.x+" "+(sf.y-radius)+" L"+(sf.x-da)+" "+(sf.y-radius-da)+" L"+(sf.x+da)+" "+(sf.y-radius-da);
 						this.svg.innerHTML += '<path fill="black" d="'+tpath+'" />';
@@ -292,7 +292,62 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 						var cyf = sf.y + radius*Math.sin(angle2);
 						var bpath = "M"+cxs+" "+cys+" Q"+sxs+" "+cy1b+" "+sxs+" "+sys+" L"+sxs+" "+syf+" Q"+sxs+" "+cy2b+" "+cxf+" "+cyf;
 						this.svg.innerHTML += '<path fill="none" stroke="black" stroke-dasharray="'+da+","+da+'" stroke-width="1" d="'+bpath+'" />';
+						var dasin1 = da*Math.sin(angle2-(Math.PI/4.0))*Math.sqrt(2);
+						var dacos1 = da*Math.cos(angle2-(Math.PI/4.0))*Math.sqrt(2);
+						var dasin2 = da*Math.sin(angle2+(Math.PI/4.0))*Math.sqrt(2);
+						var dacos2 = da*Math.cos(angle2+(Math.PI/4.0))*Math.sqrt(2);
+						var tpath = "M"+cxf+" "+cyf+" L"+(cxf+dacos1)+" "+(cyf+dasin1)+" L"+(cxf+dacos2)+" "+(cyf+dasin2);
+						this.svg.innerHTML += '<path fill="black" d="'+tpath+'" />';
 						break;
+					case "pright":
+						// create a cubic bezier curve.
+						var p1x = sf.x + radius*0.7071067811865476;
+						var p1y = sf.y - radius*0.7071067811865476;
+						var p2x = a.xedge;
+						var p2y = sf.y;
+						var b1x = p1x + (scale - (2*radius))*0.7071067811865476;
+						var b2x = p2x;
+						var b1y = p1y - (scale - (2*radius))*0.7071067811865476;
+						var b2y = b1y;
+						var bpath = "M"+p1x+" "+p1y+" C"+b1x+" "+b1y+" "+b2x+" "+b2y+" "+p2x+" "+p2y;
+						// draw the straight line.
+						bpath += " L"+p2x+" "+(ss.y - scale);
+						// draw the final bezier curve.
+						var cxb = p2x;
+						var cyb = ss.y - (scale / 2.0);
+						var angle = Math.atan2(cyb-ss.y, cxb-ss.x);
+						var cxf = ss.x + radius*Math.cos(angle);
+						var cyf = ss.y + radius*Math.sin(angle);
+						bpath += " Q"+cxb+" "+cyb+" "+cxf+" "+cyf;
+						this.svg.innerHTML += '<path fill="none" stroke="black" stroke-dasharray="'+da+','+da+'" stroke-width="1" d="'+bpath+'" />';
+						var daside = da*1.4142135623730951;
+						var tpath = "M"+p1x+" "+p1y+" L"+(p1x+daside)+" "+p1y+" L"+p1x+" "+(p1y-daside);
+						this.svg.innerHTML += '<path fill="black" d="'+tpath+'" />';
+						break;
+					case "sright":
+						// create a cubic bezier curve.
+						var p1x = sf.x;
+						var p2x = a.xedge;
+						var p1y = sf.y - radius;
+						var p2y = p1y;
+						var b1x = p1x;
+						var b2x = p2x;
+						var b1y = p1y - scale + (2*radius);
+						var b2y = b1y;
+						var bpath = "M"+p1x+" "+p1y+" C"+b1x+" "+b1y+" "+b2x+" "+b2y+" "+p2x+" "+p2y;
+						// draw the straight line.
+						bpath += " L"+p2x+" "+(ss.y - scale);
+						// draw the final bezier curve.
+						var cxb = p2x;
+						var cyb = ss.y - (scale / 2.0);
+						var angle = Math.atan2(cyb-ss.y, cxb-ss.x);
+						var cxf = ss.x + radius*Math.cos(angle);
+						var cyf = ss.y + radius*Math.sin(angle);
+						bpath += " Q"+cxb+" "+cyb+" "+cxf+" "+cyf;
+						this.svg.innerHTML += '<path fill="none" stroke="black" stroke-dasharray="'+da+','+da+'" stroke-width="1" d="'+bpath+'" />';
+						this.svg.innerHTML += '<path fill="black" d="M'+sf.x+" "+(sf.y-radius)+" L"+(sf.x-da)+" "+(sf.y-radius-da)+" L"+(sf.x+da)+" "+(sf.y-radius-da)+'" />';
+						break;
+
 
 
 				}
@@ -350,11 +405,11 @@ function MRegex(input, svgbind, stateRadius, transitionHeight) {
 					break;
 				case "p":
 					h = node.children[0].dims.h + 2*scale;
-					w = node.children[0].dims.w + scale;
+					w = node.children[0].dims.w + (scale / 2.0);
 					break;
 				case "q":
 					h = node.children[0].dims.h + 2*scale;
-					w = node.children[0].dims.w + scale;
+					w = node.children[0].dims.w + (scale / 2.0);
 					break;
 			}
 			node.dims = { w: w, h: h };
